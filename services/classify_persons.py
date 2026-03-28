@@ -9,6 +9,7 @@ class ClassificationResult:
     candidates: list = field(default_factory= list)
     incompletes: list = field(default_factory= list)
     not_cross: list = field(default_factory= list)
+    not_consult: list = field(default_factory= list)
 
 
 def classify_persons(registers):
@@ -21,6 +22,9 @@ def classify_persons(registers):
         
         elif reg["direccion"] is None or reg["pais"] is None:
             result.incompletes.append(reg)
+
+        elif reg["aConsultar"] == "No":
+            result.not_consult.append(reg)
 
         else:
             result.candidates.append(reg)
