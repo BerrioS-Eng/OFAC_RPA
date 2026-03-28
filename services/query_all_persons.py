@@ -12,10 +12,16 @@ def get_all_persons_with_detail():
     their detail fields will be null → classified as "No cruza con maestra."
     """
     query = sql.SQL("""
-        select mdp."idPersona", p."nombrePersona", p."aConsultar", mdp.direccion, mdp.pais
-        from {tabla_personas} p 
-        left join {tabla_detalle} mdp 
-        on p."idPersona"  = mdp."idPersona" 
+        SELECT 
+                    p."idPersona", 
+                    p."nombrePersona", 
+                    p."aConsultar", 
+                    mdp.direccion, 
+                    mdp.pais,
+                    mdp."idPersona" IS NOT NULL AS "cruzaConMaestra"
+        FROM {tabla_personas} p 
+        LEFT JOIN {tabla_detalle} mdp 
+            ON p."idPersona"  = mdp."idPersona" 
     """).format(
         tabla_personas = sql.Identifier(settings.table_personas),
         tabla_detalle = sql.Identifier(settings.table_maestra_detalle_personas),
