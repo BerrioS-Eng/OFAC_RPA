@@ -19,7 +19,7 @@ def _build_values(registers, state):
         for reg in registers
     ]
 
-def insert_classified(not_cross, not_consult, incompletes):
+def insert_classified(not_cross, not_consult, incompletes, dry_run=False):
     """
     Bulk Insert.
     Inserts groups in a single transaction.
@@ -38,13 +38,18 @@ def insert_classified(not_cross, not_consult, incompletes):
         cursor = conn.cursor()
         try:
             query = sql.SQL("""
-                    INSERT INTO {tablas} (...)
+                    INSERT INTO {tabla} ("idPersona", "nombrePersona", "pais", "cantidadDeResultados", "estadoTransaccion")
                     VALUES %s
                 """).format(tabla=sql.Identifier(settings.table_resultados))
 
             execute_values(cursor, query, values, page_size=1000)
-            conn.commit()
-            logger.info(f"{len(values)} classified records inserted..")
+
+            if dry_run:
+                conn.rollback()
+                logger.info(f"[DRY RUN] {len(values)} records validated, rollback executed.")
+            else:                            
+                conn.commit()
+                logger.info(f"{len(values)} classified records inserted.")
 
         except Exception as e:
             conn.rollback()

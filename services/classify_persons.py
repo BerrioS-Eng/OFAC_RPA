@@ -33,9 +33,9 @@ def classify_persons(registers):
             result.candidates.append(reg)
     
     logger.info(
-        "Classification made: ",
-        f"{len(result.candidates)} web process candidates",
-        f"{len(result.incompletes)} incomplete information",
+        f"Classification made: {len(result.candidates)} web process candidates, "
+        f"{len(result.not_consult)} persons who will not be consulted, "
+        f"{len(result.incompletes)} incomplete information, "
         f"{len(result.not_cross)} they do not cross with MaestraDetallePersonas"
     )
 
