@@ -26,4 +26,6 @@ class Settings:
     headless: bool = field(default_factory= lambda: os.getenv("HEADLESS", "true").lower() == "true")
     timeout_ms: int = field(default_factory= lambda: int(os.getenv("TIMEOUT_MS", "30000")))
 
+    screenshot_dir: str = field(default_factory= lambda: os.getenv("SCREENSHOTS_DIR", "output_screenshots"))
+
 settings = Settings()
