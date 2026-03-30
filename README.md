@@ -5,9 +5,9 @@ Automated pipeline that queries persons from a PostgreSQL database, searches eac
 ## Flow
 
 ```
-PostgreSQL → Classify → Insert non-candidates → Scrape OFAC → Insert results
-                                ↓
-                        Export Excel report
+PostgreSQL → Classify → Insert non-candidates → Checkpoint → Scrape OFAC → Insert results
+                                ↓                                                  ↑
+                        Export Excel report                          async workers (round-robin)
 ```
 
 1. **Query** — fetches all persons with address detail via LEFT JOIN
@@ -18,8 +18,10 @@ PostgreSQL → Classify → Insert non-candidates → Scrape OFAC → Insert res
    - `not_cross` → no match in `MaestraDetallePersonas`
 3. **Insert classified** — bulk inserts non-candidate groups with their status
 4. **Export report** — generates a `.xlsx` report for incomplete records
-5. **Scrape** — fills the OFAC search form per candidate, extracts result count, and takes a screenshot if matches are found
-6. **Insert results** — bulk inserts scraping outcomes
+5. **Checkpoint** — loads prior progress; already-processed candidates are skipped on resume
+6. **Scrape** — distributes candidates round-robin across `MAX_WORKERS` async Playwright pages; fills the OFAC search form, extracts result count, and takes a screenshot if matches are found
+7. **Insert results** — bulk inserts scraping outcomes
+8. **Clear checkpoint** — removes the checkpoint file on successful completion
 
 ## Requirements
 
@@ -34,7 +36,7 @@ playwright install chromium
 
 ## Configuration
 
-Copy `.env.example` to `.env` and fill in the values:
+Copy this sample to `.env` and fill in the values:
 
 ```env
 # Database
@@ -48,8 +50,10 @@ APP_URL=https://sanctionssearch.ofac.treas.gov/
 
 # Bot behavior (optional)
 HEADLESS=true
+MAX_WORKERS=3
 SCREENSHOTS_DIR=output_screenshots
 REPORTS_DIR=output_reports
+CHECKPOINT_DIR=checkpoints
 ```
 
 ## Usage
@@ -74,8 +78,11 @@ PYTHONPATH=. python3 main.py
 │   ├── insert_results.py      # Bulk insert helpers
 │   └── export_report.py       # Excel report generation
 ├── browser/
-│   ├── session.py        # Playwright lifecycle
-│   └── scraper.py        # OFAC form scraper
+│   ├── session.py        # Async Playwright lifecycle
+│   ├── scraper.py        # OFAC form scraper
+│   └── worker_pool.py    # Async worker pool with round-robin distribution
+├── checkpoint/
+│   └── checkpoint_manager.py  # JSON-based resume support
 ├── main.py               # Pipeline orchestrator
 └── requirements.txt
 ```
@@ -86,4 +93,5 @@ PYTHONPATH=. python3 main.py
 |---|---|
 | `output_screenshots/` | Screenshots of OFAC matches |
 | `output_reports/` | Excel reports per run |
+| `checkpoints/` | Resume state (auto-cleared on success) |
 | `pipeline.log` | Execution log |
