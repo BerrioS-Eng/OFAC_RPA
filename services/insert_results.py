@@ -19,6 +19,29 @@ def _build_values(registers, state):
         for reg in registers
     ]
 
+def _bulk_insert(values, dry_run, log_lable):
+    query = sql.SQL("""
+                INSERT INTO {tabla} ("idPersona", "nombrePersona", "pais", "cantidadDeResultados", "estadoTransaccion")
+                VALUES %s
+            """).format(tabla=sql.Identifier(settings.table_resultados))
+    
+    with get_connection() as conn:
+        cursor = conn.cursor()
+        try:
+            execute_values(cursor, query, values, page_size=1000)
+            if dry_run:
+                conn.rollback()
+                logger.info(f"[DRY RUN] {len(values)} {log_lable}, rollback executed.")
+            else:
+                conn.commit()
+                logger.info(f"{len(values)} {log_lable} inserted.")
+        except Exception as e:
+            conn.rollback()
+            logger.error(f"Error inserting {log_lable}: {e}")
+            raise
+        finally:
+            cursor.close()
+
 def insert_classified(not_cross, not_consult, incompletes, dry_run=False):
     """
     Bulk Insert.
@@ -34,65 +57,19 @@ def insert_classified(not_cross, not_consult, incompletes, dry_run=False):
         logger.info("No classified registers to insert.")
         return
 
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        try:
-            query = sql.SQL("""
-                    INSERT INTO {tabla} ("idPersona", "nombrePersona", "pais", "cantidadDeResultados", "estadoTransaccion")
-                    VALUES %s
-                """).format(tabla=sql.Identifier(settings.table_resultados))
-
-            execute_values(cursor, query, values, page_size=1000)
-
-            if dry_run:
-                conn.rollback()
-                logger.info(f"[DRY RUN] {len(values)} records validated, rollback executed.")
-            else:                            
-                conn.commit()
-                logger.info(f"{len(values)} classified records inserted.")
-
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"Error inserting classifieds: {e}")
-            raise
-
-        finally:
-            cursor.close()
+    _bulk_insert(values, dry_run, "classified records")
 
 def insert_scraping_results(results, dry_run=False):
     """Insert the scraped results."""
 
     if not results:
-        logger.info("No scraping results to insert")
+        logger.info("No scraping results to insert.")
         return
     
-    with get_connection() as conn:
-        cursor = conn.cursor()
-        try:
-            query = sql.SQL("""
-                    INSERT INTO {tabla} ("idPersona", "nombrePersona", "pais", "cantidadDeResultados", "estadoTransaccion")
-                    VALUES %s
-                """).format(tabla=sql.Identifier(settings.table_resultados))
-            
-            values = [
-                (res["idPersona"], res["nombrePersona"], res["pais"], res["cantidadDeResultados"], res["estadoTransaccion"])
-                for res in results
-            ]
-            
-            execute_values(cursor, query, values, page_size=1000)
-
-            if dry_run:
-                conn.rollback()
-                logger.info(f"[DRY RUN] {len(results)} data scraped, rollback executed.")
-            else:                            
-                conn.commit()
-                logger.info(f"{len(results)} scraped data inserted.")
-
-        except Exception as e:
-            conn.rollback()
-            logger.error(f"Error inserting classifieds: {e}")
-            raise
-
-        finally:
-            cursor.close()
+    values = [
+        (res["idPersona"], res["nombrePersona"], res["pais"], res["cantidadDeResultados"], res["estadoTransaccion"])
+        for res in results
+    ]
+    
+    _bulk_insert(values, dry_run, "scraped records")
 
