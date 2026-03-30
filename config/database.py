@@ -59,10 +59,6 @@ def get_connection():
 def get_cursor(commit=True):
     """
     Provides a dictionary cursor.
-
-        Args:
-            commit: True for write operations (INSERT/UPDATE),
-                    False for read-only operations (SELECT).
     """
     with get_connection() as conn:
         cursor = conn.cursor(cursor_factory=RealDictCursor)
