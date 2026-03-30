@@ -1,20 +1,20 @@
-from playwright.sync_api import sync_playwright
+from playwright.async_api import async_playwright
 from config.settings import settings
 
 _playwright = None
 _browser = None
 
-def init_browser():
+async def init_browser():
     """Start Playwright and the browser. It's called ONCE."""
     global _playwright, _browser
-    _playwright = sync_playwright().start()
-    _browser = _playwright.chromium.launch(headless=settings.headless)
+    _playwright = await async_playwright().start()
+    _browser = await _playwright.chromium.launch(headless=settings.headless)
     return _browser
 
-def close_browser():
+async def close_browser():
     """Cierra navegador y Playwright. Se llama al finalizar."""
     global _playwright, _browser
     if _browser:
-        _browser.close()
+        await _browser.close()
     if _playwright:
-        _playwright.stop()
+        await _playwright.stop()

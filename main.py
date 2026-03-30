@@ -4,10 +4,10 @@ from config.database import init_pool, close_pool
 from services.query_all_persons import get_all_persons_with_detail
 from services.classify_persons import classify_persons
 from services.insert_results import insert_classified, insert_scraping_results
-from browser.session import init_browser, close_browser
-from browser.scraper import scrape_person, ensure_screenshots_dir
 from services.export_report import export_report
-from config.settings import settings
+from browser.scraper import ensure_screenshots_dir
+from browser.worker_pool import process_persons
+from checkpoint.checkpoint_manager import load_checkpoint, clear_checkpoint
 
 logging.basicConfig(
     level=logging.INFO,
@@ -41,32 +41,26 @@ def run_pipeline(dry_run: bool):
     )
 
     # Export report
-    export_report("Información incompleta", classification.incompletes)
+    if classification.incompletes:
+        export_report("Información incompleta", classification.incompletes)
 
     # Scraping
     if not classification.candidates:
         logger.info("No candidates for process. Done.")
         return
     
-    browser = init_browser()
-    try:
-        page = browser.new_page()
-        page.goto(settings.app_url)
-        page.wait_for_load_state("networkidle")
+    ensure_screenshots_dir()
+    process_ids = load_checkpoint()
 
-        ensure_screenshots_dir()
-
-        results = []
-
-        for person in classification.candidates:
-            data_scraped = scrape_person(page, person)
-            results.append(data_scraped)
-
-        # Persist scraping results
+    results = process_persons(classification.candidates, process_ids)
+    
+    # Persist scraping results
+    if results:
         insert_scraping_results(results, dry_run=dry_run)
     
-    finally:
-        close_browser()
+    # Clear checkpoint on success
+    clear_checkpoint()
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OFAC RPA Pipeline")
