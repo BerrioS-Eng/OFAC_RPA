@@ -11,6 +11,7 @@ env/
 # Outputs
 output_screenshots/
 output_reports/
+checkpoints/
 
 # Logs
 pipeline.log
