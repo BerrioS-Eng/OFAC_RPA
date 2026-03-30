@@ -6,6 +6,7 @@ from services.classify_persons import classify_persons
 from services.insert_results import insert_classified, insert_scraping_results
 from browser.session import init_browser, close_browser
 from browser.scraper import scrape_person, ensure_screenshots_dir
+from services.export_report import export_report
 from config.settings import settings
 
 logging.basicConfig(
@@ -38,6 +39,9 @@ def run_pipeline(dry_run: bool):
         incompletes=classification.incompletes,
         dry_run=dry_run
     )
+
+    # Export report
+    export_report("Información incompleta", classification.incompletes)
 
     # Scraping
     if not classification.candidates:

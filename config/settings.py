@@ -13,6 +13,11 @@ def _require(var: str) -> str:
 
 @dataclass
 class Settings:
+    # Default bot behavior
+    headless: bool = True
+    screenshot_dir: str = "output_screenshots"
+    reports_dir: str = "output_reports"
+
     # Database
     database_url: str = field(default_factory= lambda: _require("DATABASE_URL"))
     table_personas: str = field(default_factory= lambda: _require("TABLE_PERSONAS"))
@@ -22,8 +27,10 @@ class Settings:
     # Platform Web
     app_url: str = field(default_factory= lambda: _require("APP_URL"))
 
-    # Bot behavior
-    headless: bool = field(default_factory= lambda: os.getenv("HEADLESS", "true").lower() == "true")
-    screenshot_dir: str = field(default_factory= lambda: os.getenv("SCREENSHOTS_DIR", "output_screenshots"))
+    # Configurable bot behavior
+    def __post_init__(self):
+        self.headless = os.getenv("HEADLESS", "true").lower() == "true"
+        self.screenshot_dir = os.getenv("SCREENSHOTS_DIR", self.screenshot_dir)
+        self.reports_dir = os.getenv("REPORTS_DIR", self.reports_dir)
 
 settings = Settings()

@@ -1,5 +1,16 @@
+# Entorno virtual
 env/
+
+# Variables de entorno
 .env
-*/__pycache__/
+
+# Python cache
+**/__pycache__/
+*.pyc
+
+# Outputs
 output_screenshots/
+output_reports/
+
+# Logs
 pipeline.log
