@@ -23,11 +23,11 @@ def classify_persons(registers):
         if not reg["cruzaConMaestra"]:
             result.not_cross.append(reg)
         
-        elif reg["aConsultar"] == "No":
-            result.not_consult.append(reg)
-        
         elif reg["direccion"] is None or reg["pais"] is None:
             result.incompletes.append(reg)
+
+        elif reg["aConsultar"] == "No":
+            result.not_consult.append(reg)
 
         else:
             result.candidates.append(reg)
