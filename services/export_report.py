@@ -1,6 +1,6 @@
 import os
 import logging
-import datetime
+from datetime import datetime
 from openpyxl import Workbook
 from openpyxl.styles import Font, PatternFill, Alignment
 from config.settings import settings
@@ -48,7 +48,7 @@ def export_report(title, registers):
     ws.auto_filter.ref = f"A1:{ws.cell(row=1, column=len(headers)).column_letter}{len(registers) + 1}"
 
     # Save file
-    timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     normalized_title = title.replace(" ", "_")
     normalized_title = "".join(c for c in normalized_title if c.isalnum() or c == "_")
     filename = f"{normalized_title}_{timestamp}.xlsx"

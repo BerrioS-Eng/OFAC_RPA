@@ -17,6 +17,7 @@ class Settings:
     headless: bool = True
     screenshot_dir: str = "output_screenshots"
     reports_dir: str = "output_reports"
+    checkpoint_dir: str = "checkpoints"
 
     # Database
     database_url: str = field(default_factory= lambda: _require("DATABASE_URL"))
@@ -32,5 +33,6 @@ class Settings:
         self.headless = os.getenv("HEADLESS", "true").lower() == "true"
         self.screenshot_dir = os.getenv("SCREENSHOTS_DIR", self.screenshot_dir)
         self.reports_dir = os.getenv("REPORTS_DIR", self.reports_dir)
+        self.checkpoint_dir = os.getenv("CHECKPOINT_DIR", self.checkpoint_dir)
 
 settings = Settings()

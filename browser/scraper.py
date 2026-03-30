@@ -1,7 +1,7 @@
 import logging
 import re
 import os
-import datetime
+from datetime import datetime
 from config.settings import settings
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ def scrape_person(page, person):
 
         # Screenshot if results found
         if result_int > 0:
-            filename = f"{datetime.datetime.now().strftime('%Y%m%d')}_{person['idPersona']}.png"
+            filename = f"{datetime.now().strftime('%Y%m%d')}_{person['idPersona']}.png"
             page.screenshot(path=os.path.join(settings.screenshot_dir, filename), full_page=True)
             logger.info(f"Screenshot taken for {person['nombrePersona']}")
 
